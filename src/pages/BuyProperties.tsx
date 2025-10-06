@@ -1,20 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
-import PropertyCard from "@/components/PropertyCard";
-import { sampleProperties } from "@/data/sampleProperties";
+import PropertyCard, { Property } from "@/components/PropertyCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const BuyProperties = () => {
+  const { toast } = useToast();
   const [searchLocation, setSearchLocation] = useState("");
   const [propertyType, setPropertyType] = useState("all");
   const [priceRange, setPriceRange] = useState("all");
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const saleProperties = sampleProperties.filter((p) => p.type === "sale");
+  useEffect(() => {
+    fetchProperties();
+  }, []);
 
-  const filteredProperties = saleProperties.filter((property) => {
+  const fetchProperties = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("listing_type", "sale")
+      .eq("status", "active");
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load properties",
+        variant: "destructive",
+      });
+    } else {
+      const formattedProperties: Property[] = (data || []).map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        price: parseFloat(p.price),
+        location: p.location,
+        bedrooms: p.bedrooms,
+        bathrooms: p.bathrooms,
+        area: p.area,
+        type: "sale" as const,
+        propertyType: p.property_type,
+        image: p.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800",
+        featured: p.featured,
+      }));
+      setProperties(formattedProperties);
+    }
+    setLoading(false);
+  };
+
+  const filteredProperties = properties.filter((property) => {
     const matchesLocation = property.location.toLowerCase().includes(searchLocation.toLowerCase());
     const matchesType = propertyType === "all" || property.propertyType === propertyType;
     
@@ -31,7 +70,6 @@ const BuyProperties = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Header */}
       <section className="py-12 bg-gradient-to-r from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl font-bold mb-4">Properties for Sale</h1>
@@ -41,7 +79,6 @@ const BuyProperties = () => {
         </div>
       </section>
 
-      {/* Filters */}
       <section className="py-8 border-b border-border">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -61,9 +98,9 @@ const BuyProperties = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="Apartment">Apartment</SelectItem>
-                <SelectItem value="Villa">Villa</SelectItem>
-                <SelectItem value="House">House</SelectItem>
+                <SelectItem value="apartment">Apartment</SelectItem>
+                <SelectItem value="villa">Villa</SelectItem>
+                <SelectItem value="house">House</SelectItem>
               </SelectContent>
             </Select>
 
@@ -91,25 +128,25 @@ const BuyProperties = () => {
         </div>
       </section>
 
-      {/* Properties Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <div className="mb-6">
-            <p className="text-muted-foreground">
-              Showing {filteredProperties.length} {filteredProperties.length === 1 ? "property" : "properties"}
-            </p>
-          </div>
-          
-          {filteredProperties.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
-            </div>
+          {loading ? (
+            <p className="text-center text-muted-foreground">Loading properties...</p>
+          ) : filteredProperties.length === 0 ? (
+            <p className="text-center text-muted-foreground">No properties found matching your criteria.</p>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-xl text-muted-foreground">No properties found matching your criteria</p>
-            </div>
+            <>
+              <div className="mb-6">
+                <p className="text-muted-foreground">
+                  Showing {filteredProperties.length} {filteredProperties.length === 1 ? "property" : "properties"}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProperties.map((property) => (
+                  <PropertyCard key={property.id} property={property} />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </section>

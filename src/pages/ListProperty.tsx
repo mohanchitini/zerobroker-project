@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,17 +9,69 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Building2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ListProperty = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [listingType, setListingType] = useState("sale");
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please login to list a property",
+          variant: "destructive",
+        });
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+      }
+    };
+    checkAuth();
+  }, [navigate, toast]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast({
-      title: "Property Listed Successfully!",
-      description: "Your property has been listed. Buyers will contact you directly.",
-    });
+    if (!user) return;
+    
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    
+    const propertyData = {
+      user_id: user.id,
+      title: formData.get("title") as string,
+      description: formData.get("description") as string,
+      location: formData.get("location") as string,
+      price: parseFloat(formData.get("price") as string),
+      property_type: formData.get("propertyType") as string,
+      listing_type: listingType,
+      bedrooms: parseInt(formData.get("bedrooms") as string),
+      bathrooms: parseInt(formData.get("bathrooms") as string),
+      area: parseInt(formData.get("area") as string),
+      status: "active",
+    };
+
+    const { error } = await supabase.from("properties").insert([propertyData]);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Property Listed Successfully!",
+        description: "Your property has been listed. Buyers will contact you directly.",
+      });
+      navigate("/");
+    }
+    setLoading(false);
   };
 
   return (
@@ -56,6 +109,7 @@ const ListProperty = () => {
                 <Label htmlFor="property-title">Property Title *</Label>
                 <Input
                   id="property-title"
+                  name="title"
                   placeholder="e.g., Luxury 3BHK Apartment in Whitefield"
                   required
                 />
@@ -63,7 +117,7 @@ const ListProperty = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="property-type">Property Type *</Label>
-                <Select required>
+                <Select name="propertyType" required>
                   <SelectTrigger id="property-type">
                     <SelectValue placeholder="Select property type" />
                   </SelectTrigger>
@@ -81,6 +135,7 @@ const ListProperty = () => {
                   <Label htmlFor="bedrooms">Bedrooms *</Label>
                   <Input
                     id="bedrooms"
+                    name="bedrooms"
                     type="number"
                     min="1"
                     placeholder="3"
@@ -91,6 +146,7 @@ const ListProperty = () => {
                   <Label htmlFor="bathrooms">Bathrooms *</Label>
                   <Input
                     id="bathrooms"
+                    name="bathrooms"
                     type="number"
                     min="1"
                     placeholder="2"
@@ -101,6 +157,7 @@ const ListProperty = () => {
                   <Label htmlFor="area">Area (sqft) *</Label>
                   <Input
                     id="area"
+                    name="area"
                     type="number"
                     min="100"
                     placeholder="1450"
@@ -115,6 +172,7 @@ const ListProperty = () => {
                 </Label>
                 <Input
                   id="price"
+                  name="price"
                   type="number"
                   min="1000"
                   placeholder={listingType === "sale" ? "8500000" : "25000"}
@@ -126,6 +184,7 @@ const ListProperty = () => {
                 <Label htmlFor="location">Location *</Label>
                 <Input
                   id="location"
+                  name="location"
                   placeholder="e.g., Whitefield, Bangalore"
                   required
                 />
@@ -135,44 +194,16 @@ const ListProperty = () => {
                 <Label htmlFor="description">Property Description *</Label>
                 <Textarea
                   id="description"
+                  name="description"
                   placeholder="Describe your property, nearby amenities, special features..."
                   rows={5}
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="contact-name">Your Name *</Label>
-                <Input
-                  id="contact-name"
-                  placeholder="Full name"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="contact-phone">Phone Number *</Label>
-                  <Input
-                    id="contact-phone"
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-email">Email</Label>
-                  <Input
-                    id="contact-email"
-                    type="email"
-                    placeholder="your@email.com"
-                  />
-                </div>
-              </div>
-
               <div className="pt-4">
-                <Button type="submit" size="lg" variant="hero" className="w-full">
-                  List Property for FREE
+                <Button type="submit" size="lg" variant="hero" className="w-full" disabled={loading}>
+                  {loading ? "Listing..." : "List Property for FREE"}
                 </Button>
                 <p className="text-sm text-muted-foreground text-center mt-3">
                   By listing, you agree to be contacted by interested buyers directly
