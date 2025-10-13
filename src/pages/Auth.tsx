@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Building2 } from "lucide-react";
+import { Building2, Mail } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -47,6 +48,25 @@ const Auth = () => {
       navigate("/");
     }
     setLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/`,
+      },
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -165,6 +185,19 @@ const Auth = () => {
                 {loading ? "Logging in..." : "Login"}
               </Button>
             </form>
+            <div className="mt-4">
+              <Separator className="my-4" />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Continue with Google
+              </Button>
+            </div>
           </TabsContent>
 
           <TabsContent value="signup">
@@ -232,6 +265,19 @@ const Auth = () => {
                 {loading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
+            <div className="mt-4">
+              <Separator className="my-4" />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Continue with Google
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
       </Card>

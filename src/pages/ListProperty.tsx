@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Building2 } from "lucide-react";
+import { Building2, Upload, X, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const ListProperty = () => {
@@ -17,6 +17,8 @@ const ListProperty = () => {
   const [listingType, setListingType] = useState("sale");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,12 +37,67 @@ const ListProperty = () => {
     checkAuth();
   }, [navigate, toast]);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + imageFiles.length > 5) {
+      toast({
+        title: "Too many images",
+        description: "You can upload maximum 5 images",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setImageFiles(prev => [...prev, ...files]);
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
     
     setLoading(true);
     const formData = new FormData(e.currentTarget);
+    
+    // Upload images first
+    const imageUrls: string[] = [];
+    if (imageFiles.length > 0) {
+      for (const file of imageFiles) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('property-images')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          toast({
+            title: "Image upload failed",
+            description: uploadError.message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('property-images')
+          .getPublicUrl(fileName);
+        
+        imageUrls.push(publicUrl);
+      }
+    }
     
     const propertyData = {
       user_id: user.id,
@@ -53,6 +110,7 @@ const ListProperty = () => {
       bedrooms: parseInt(formData.get("bedrooms") as string),
       bathrooms: parseInt(formData.get("bathrooms") as string),
       area: parseInt(formData.get("area") as string),
+      images: imageUrls.length > 0 ? imageUrls : null,
       status: "active",
     };
 
@@ -199,6 +257,54 @@ const ListProperty = () => {
                   rows={5}
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="images">Property Images (Max 5)</Label>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center w-full">
+                    <label htmlFor="images" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/70 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-10 h-10 mb-2 text-muted-foreground" />
+                        <p className="mb-2 text-sm text-muted-foreground">
+                          <span className="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          PNG, JPG or WEBP (MAX. 5MB each)
+                        </p>
+                      </div>
+                      <input
+                        id="images"
+                        type="file"
+                        className="hidden"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        multiple
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                  </div>
+                  
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-3 gap-4">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="pt-4">

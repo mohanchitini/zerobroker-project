@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, TrendingUp, Shield, Users } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import PropertyCard from "@/components/PropertyCard";
 import { sampleProperties } from "@/data/sampleProperties";
 import heroImage from "@/assets/hero-real-estate.jpg";
@@ -120,11 +121,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-border">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2025 ZeroBroker. Your Property, Your Profit – No Middlemen, No Commission.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

@@ -51,6 +51,9 @@ const Navbar = () => {
             <Link to="/rent" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Rent Property
             </Link>
+            <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+              About
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
@@ -65,6 +68,10 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    <User className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
@@ -95,14 +102,23 @@ const Navbar = () => {
             <Link to="/rent" className="block py-2 text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setIsOpen(false)}>
               Rent Property
             </Link>
+            <Link to="/about" className="block py-2 text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setIsOpen(false)}>
+              About
+            </Link>
             <Button variant="hero" className="w-full" asChild>
               <Link to="/list-property">List Property FREE</Link>
             </Button>
             {user ? (
-              <Button variant="outline" className="w-full" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
+              <>
+                <Button variant="outline" className="w-full" onClick={() => { navigate("/dashboard"); setIsOpen(false); }}>
+                  <User className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Button>
+                <Button variant="outline" className="w-full" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </>
             ) : (
               <Button variant="outline" className="w-full" asChild>
                 <Link to="/auth">Login / Sign Up</Link>

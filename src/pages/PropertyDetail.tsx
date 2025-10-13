@@ -1,14 +1,17 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import ContactSellerDialog from "@/components/ContactSellerDialog";
 import { sampleProperties } from "@/data/sampleProperties";
 import { MapPin, BedDouble, Bath, Maximize, Phone, Mail, ArrowLeft } from "lucide-react";
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const property = sampleProperties.find((p) => p.id === id);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
 
   if (!property) {
     return (
@@ -147,7 +150,7 @@ const PropertyDetail = () => {
                   Call Owner
                 </Button>
                 
-                <Button variant="outline" className="w-full" size="lg">
+                <Button variant="outline" className="w-full" size="lg" onClick={() => setContactDialogOpen(true)}>
                   <Mail className="h-5 w-5" />
                   Send Message
                 </Button>
@@ -163,6 +166,14 @@ const PropertyDetail = () => {
           </div>
         </div>
       </div>
+
+      <ContactSellerDialog
+        open={contactDialogOpen}
+        onOpenChange={setContactDialogOpen}
+        propertyId={property.id}
+        sellerId="sample-seller-id"
+        propertyTitle={property.title}
+      />
     </div>
   );
 };
