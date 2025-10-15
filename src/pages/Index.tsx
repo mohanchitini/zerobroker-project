@@ -1,14 +1,55 @@
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, TrendingUp, Shield, Users } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PropertyCard from "@/components/PropertyCard";
-import { sampleProperties } from "@/data/sampleProperties";
+import PropertyCard, { Property } from "@/components/PropertyCard";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-real-estate.jpg";
 
 const Index = () => {
-  const featuredProperties = sampleProperties.filter((p) => p.featured);
+  const navigate = useNavigate();
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+
+  useEffect(() => {
+    fetchFeaturedProperties();
+  }, []);
+
+  const fetchFeaturedProperties = async () => {
+    const { data } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("featured", true)
+      .eq("status", "active")
+      .limit(3);
+
+    if (data) {
+      const formatted: Property[] = data.map((p: any) => ({
+        id: p.id,
+        title: p.title,
+        price: parseFloat(p.price),
+        location: p.location,
+        bedrooms: p.bedrooms,
+        bathrooms: p.bathrooms,
+        area: p.area,
+        type: p.listing_type as "sale" | "rent",
+        propertyType: p.property_type,
+        image: p.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800",
+        featured: p.featured,
+      }));
+      setFeaturedProperties(formatted);
+    }
+  };
+
+  const handleBrowseProperties = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+    } else {
+      navigate("/buy");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,8 +71,8 @@ const Index = () => {
             No Middlemen. No Commission. Direct Connection.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="secondary" size="lg" asChild>
-              <Link to="/buy">Browse Properties</Link>
+            <Button variant="secondary" size="lg" onClick={handleBrowseProperties}>
+              Browse Properties
             </Button>
             <Button variant="outline" size="lg" className="bg-white/10 backdrop-blur border-white text-white hover:bg-white hover:text-primary" asChild>
               <Link to="/list-property">List Your Property Free</Link>

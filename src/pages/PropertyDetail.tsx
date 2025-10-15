@@ -1,17 +1,87 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ContactSellerDialog from "@/components/ContactSellerDialog";
-import { sampleProperties } from "@/data/sampleProperties";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { MapPin, BedDouble, Bath, Maximize, Phone, Mail, ArrowLeft } from "lucide-react";
+
+interface PropertyDetail {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  area: number;
+  property_type: string;
+  listing_type: string;
+  images: string[];
+  amenities: string[];
+  featured: boolean;
+  user_id: string;
+}
 
 const PropertyDetail = () => {
   const { id } = useParams();
-  const property = sampleProperties.find((p) => p.id === id);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [property, setProperty] = useState<PropertyDetail | null>(null);
+  const [loading, setLoading] = useState(true);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
+
+  useEffect(() => {
+    checkAuthAndFetch();
+  }, [id]);
+
+  const checkAuthAndFetch = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    await fetchProperty();
+  };
+
+  const fetchProperty = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("id", id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load property details",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    setProperty(data);
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-12 text-center">
+          <p className="text-muted-foreground">Loading property details...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!property) {
     return (
@@ -33,7 +103,7 @@ const PropertyDetail = () => {
 
       <div className="container mx-auto px-4 py-8">
         <Button variant="ghost" asChild className="mb-6">
-          <Link to={property.type === "sale" ? "/buy" : "/rent"}>
+          <Link to={property.listing_type === "sale" ? "/buy" : "/rent"}>
             <ArrowLeft className="h-4 w-4" />
             Back to Listings
           </Link>
@@ -45,12 +115,12 @@ const PropertyDetail = () => {
             {/* Image */}
             <div className="relative rounded-lg overflow-hidden">
               <img
-                src={property.image}
+                src={property.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800"}
                 alt={property.title}
                 className="w-full h-96 object-cover"
               />
               <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
-                For {property.type === "sale" ? "Sale" : "Rent"}
+                For {property.listing_type === "sale" ? "Sale" : "Rent"}
               </Badge>
               {property.featured && (
                 <Badge className="absolute top-4 right-4 bg-accent text-accent-foreground">
@@ -87,42 +157,23 @@ const PropertyDetail = () => {
               <div>
                 <h2 className="text-2xl font-semibold mb-3">About this Property</h2>
                 <p className="text-muted-foreground leading-relaxed">
-                  This {property.propertyType.toLowerCase()} offers excellent living space in the prime location of {property.location}. 
-                  With {property.bedrooms} bedrooms and {property.bathrooms} bathrooms, it provides comfortable accommodation 
-                  {property.type === "rent" ? " for families and working professionals" : " for modern living"}.
-                  The property spans {property.area} square feet and comes with modern amenities.
+                  {property.description}
                 </p>
               </div>
 
-              <div>
-                <h2 className="text-2xl font-semibold mb-3">Key Features</h2>
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <li className="flex items-center gap-2 text-muted-foreground">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <span>Spacious {property.propertyType}</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-muted-foreground">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <span>Prime Location</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-muted-foreground">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <span>24/7 Security</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-muted-foreground">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <span>Power Backup</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-muted-foreground">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <span>Car Parking</span>
-                  </li>
-                  <li className="flex items-center gap-2 text-muted-foreground">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <span>Gym & Pool</span>
-                  </li>
-                </ul>
-              </div>
+              {property.amenities && property.amenities.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-semibold mb-3">Amenities</h2>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {property.amenities.map((amenity, index) => (
+                      <li key={index} className="flex items-center gap-2 text-muted-foreground">
+                        <div className="h-2 w-2 rounded-full bg-primary" />
+                        <span>{amenity}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </Card>
           </div>
 
@@ -132,7 +183,7 @@ const PropertyDetail = () => {
             <Card className="p-6 sticky top-24 space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">
-                  {property.type === "sale" ? "Total Price" : "Monthly Rent"}
+                  {property.listing_type === "sale" ? "Total Price" : "Monthly Rent"}
                 </p>
                 <p className="text-4xl font-bold text-primary">
                   ₹{property.price.toLocaleString("en-IN")}
@@ -171,7 +222,7 @@ const PropertyDetail = () => {
         open={contactDialogOpen}
         onOpenChange={setContactDialogOpen}
         propertyId={property.id}
-        sellerId="sample-seller-id"
+        sellerId={property.user_id}
         propertyTitle={property.title}
       />
     </div>

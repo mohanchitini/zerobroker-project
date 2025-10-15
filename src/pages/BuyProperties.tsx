@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import PropertyCard, { Property } from "@/components/PropertyCard";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PropertyChatbot } from "@/components/PropertyChatbot";
 
 const BuyProperties = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [searchLocation, setSearchLocation] = useState("");
   const [propertyType, setPropertyType] = useState("all");
@@ -18,8 +20,19 @@ const BuyProperties = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProperties();
+    checkAuthAndFetch();
   }, []);
+
+  const checkAuthAndFetch = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    await fetchProperties();
+  };
 
   const fetchProperties = async () => {
     setLoading(true);
