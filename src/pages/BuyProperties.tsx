@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PropertyChatbot } from "@/components/PropertyChatbot";
 
 const BuyProperties = () => {
   const { toast } = useToast();
@@ -69,6 +70,7 @@ const BuyProperties = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <PropertyChatbot />
 
       <section className="py-12 bg-gradient-to-r from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
