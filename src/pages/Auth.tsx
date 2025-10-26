@@ -149,7 +149,7 @@ const Auth = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
             <Building2 className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold">ZeroBroker</h1>
+          <h1 className="text-3xl font-bold">TrueEstate</h1>
           <p className="text-muted-foreground mt-2">Your Property, Your Profit</p>
         </div>
 

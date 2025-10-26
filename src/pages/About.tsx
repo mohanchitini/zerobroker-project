@@ -10,7 +10,7 @@ const About = () => {
 
       <section className="py-12 bg-gradient-to-r from-primary/10 to-accent/10">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">About ZeroBroker</h1>
+          <h1 className="text-4xl font-bold mb-4">About TrueEstate</h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
             Revolutionizing the real estate market by eliminating unnecessary middlemen and commission fees
           </p>
@@ -23,8 +23,8 @@ const About = () => {
             <div>
               <h2 className="text-3xl font-bold mb-4">Our Mission</h2>
               <p className="text-muted-foreground mb-4">
-                ZeroBroker was created with a simple yet powerful vision: to empower property owners 
-                and buyers by removing the traditional broker model that adds unnecessary costs to 
+                TrueEstate was created with a simple yet powerful vision: to empower property owners 
+                and buyers by removing the traditional broker model that adds unnecessary costs to
                 real estate transactions.
               </p>
               <p className="text-muted-foreground mb-4">
@@ -46,7 +46,7 @@ const About = () => {
             </div>
           </div>
 
-          <h2 className="text-3xl font-bold text-center mb-12">Why ZeroBroker?</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Why TrueEstate?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
             <Card className="p-6 text-center hover:shadow-[var(--shadow-elevated)] transition-all">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">

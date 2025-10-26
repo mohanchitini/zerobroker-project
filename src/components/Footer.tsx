@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About Section */}
           <div>
-            <h3 className="text-lg font-bold mb-4">ZeroBroker</h3>
+            <h3 className="text-lg font-bold mb-4">TrueEstate</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Your Property, Your Profit – No Middlemen, No Commission. 
               Revolutionizing real estate transactions in India.
@@ -99,8 +99,8 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <a href="mailto:info@zerobroker.com" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  info@zerobroker.com
+                <a href="mailto:info@trueestate.com" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  info@trueestate.com
                 </a>
               </li>
               <li className="flex items-start gap-2">
@@ -121,7 +121,7 @@ const Footer = () => {
 
         <div className="border-t border-border mt-8 pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            &copy; 2025 ZeroBroker. All rights reserved. Your Property, Your Profit – No Middlemen, No Commission.
+            &copy; 2025 TrueEstate. All rights reserved. Your Property, Your Profit – No Middlemen, No Commission.
           </p>
         </div>
       </div>

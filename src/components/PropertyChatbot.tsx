@@ -17,7 +17,7 @@ export const PropertyChatbot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hello! I'm your ZeroBroker property assistant. I can help you find properties, answer questions about listings, and provide information about our commission-free platform. How can I assist you today?",
+      content: "Hello! I'm your TrueEstate property assistant. I can help you find properties, answer questions about listings, and provide information about our commission-free platform. How can I assist you today?",
     },
   ]);
   const [input, setInput] = useState("");

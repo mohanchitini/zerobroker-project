@@ -41,7 +41,7 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary hover:opacity-80 transition-opacity">
             <Building2 className="h-6 w-6" />
-            <span>ZeroBroker</span>
+            <span>TrueEstate</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
